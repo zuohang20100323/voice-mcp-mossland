@@ -12,48 +12,23 @@ An MCP (Model Context Protocol) server for AI voice synthesis with an inline aud
 - 🎵 **Inline Audio Player** — Beautiful WeChat-style player with waveform visualization
 - 📝 **Transcript Toggle** — Show/hide the spoken text
 - 🌙 **Dark Mode Support** — Automatic theme adaptation
-- ⚡ **Cloudflare Workers** — Fast, serverless deployment
+- ⚡ **Railway Deployment** — Easy one-click deploy
 
-## Quick Start
-
-### 1. Clone the repository
+## Quick Start (Local)
 
 ```bash
 git clone https://github.com/zuohang20100323/voice-mcp-mossland.git
 cd voice-mcp-mossland
-```
-
-### 2. Install dependencies
-
-```bash
 npm install
 ```
 
-### 3. Configure Mossland API
-
-You'll need a Mossland account with a cloned voice.
-
-Add your secrets to Cloudflare:
+Set environment variables:
 
 ```bash
-npx wrangler secret put MOSSLAND_API_KEY
-npx wrangler secret put MOSSLAND_VOICE_ID
-npx wrangler secret put MOSSLAND_BASE_URL  # Optional, defaults to https://api.mosi.cn/v1
-npx wrangler secret put MOSSLAND_TTS_MODEL  # Optional, defaults to moss-speech-turbo
-npx wrangler secret put BOT_NAME  # Optional, defaults to "AI"
+export MOSSLAND_API_KEY=your-key
+export MOSSLAND_VOICE_ID=your-voice-id
+npm start
 ```
-
-### 4. Deploy
-
-```bash
-npx wrangler deploy
-```
-
-### 5. Connect to Claude.ai
-
-1. Go to **Settings → Connectors → Add Connector**
-2. Enter your Worker URL: `https://your-worker.workers.dev/mcp`
-3. Done! The `speak` tool is now available.
 
 ## Configuration
 
@@ -63,22 +38,15 @@ npx wrangler deploy
 | `MOSSLAND_VOICE_ID` | ✅ | The cloned voice ID |
 | `MOSSLAND_BASE_URL` | ❌ | Mossland API base URL (default: `https://api.mosi.cn/v1`) |
 | `MOSSLAND_TTS_MODEL` | ❌ | TTS model name (default: `moss-speech-turbo`) |
-| `BOT_NAME` | ❌ | Display name (default: "AI") |
+| `BOT_NAME` | ❌ | Display name (default: "S.CHI") |
 
 ## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /mcp` | MCP server (SSE protocol) |
-| `GET /speak?text=Hello` | Direct audio file |
+| `GET /mcp` | MCP Streamable HTTP endpoint |
+| `GET /speak?text=Hello` | Direct audio download |
 | `GET /status` | Health check |
-
-## Tech Stack
-
-- [Cloudflare Workers](https://workers.cloudflare.com/) — Serverless runtime
-- [MCP SDK](https://github.com/modelcontextprotocol/sdk) — Model Context Protocol
-- [Mossland TTS](https://api.mosi.cn) — Voice synthesis
-- [ext-apps](https://modelcontextprotocol.io/docs/concepts/ext-apps) — Inline UI rendering
 
 ## License
 
