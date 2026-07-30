@@ -45,10 +45,11 @@ function mosslandTTS(text) {
     const url = new URL(MOSSLAND_BASE_URL);
     const lib = url.protocol === "http:" ? http : https;
 
+    const basePath = url.pathname.replace(/\/+$/, "");
     const opts = {
       hostname: url.hostname,
       port: url.port || 443,
-      path: "/audio/speech",
+      path: basePath + "/audio/speech",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
