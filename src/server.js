@@ -197,8 +197,6 @@ const transport = new WebStandardStreamableHTTPServerTransport({
   enableJsonResponse: true,
 });
 
-await server.server.connect(transport);
-
 const httpServer = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const path = url.pathname;
@@ -274,7 +272,12 @@ const httpServer = http.createServer(async (req, res) => {
   res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>voice-mcp-mossland</title><style>body{font-family:system-ui;max-width:600px;margin:40px auto;padding:20px;color:#333;line-height:1.6}h1{color:#07c160}</style></head><body><h1>🎙️ voice-mcp-mossland</h1><p>MCP TTS server — Mossland engine</p><p>Bot: <strong>${ENV.BOT_NAME}</strong></p><p>MCP: <code>http://${req.headers.host}/mcp</code></p><p>Audio: <code>GET /speak?text=Hello</code></p><p>Status: <code>GET /status</code></p></body></html>`);
 });
 
+// Start HTTP server before connecting transport
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`voice-mcp-mossland running on port ${PORT}`);
+  // Connect MCP transport after server is listening
+  server.server.connect(transport).catch(err => {
+    console.error('MCP transport connect failed:', err);
+  });
 });
