@@ -1,32 +1,26 @@
-# 🎙️ voice-mcp
+# 🎙️ voice-mcp-mossland
 
-An MCP (Model Context Protocol) server for AI voice synthesis with an inline audio player. Give your AI assistant a custom cloned voice!
+An MCP (Model Context Protocol) server for AI voice synthesis with an inline audio player. Uses **Mossland TTS** engine with your custom cloned voice.
+
+> Forked from [garan0613/voice-mcp](https://github.com/garan0613/voice-mcp) — original MiniMax engine replaced with Mossland.
 
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Features
 
-- 🎤 **Custom Voice Cloning** — Use MiniMax TTS API with your own cloned voice
+- 🎤 **Custom Voice Cloning** — Use Mossland TTS with your own cloned voice
 - 🎵 **Inline Audio Player** — Beautiful WeChat-style player with waveform visualization
 - 📝 **Transcript Toggle** — Show/hide the spoken text
 - 🌙 **Dark Mode Support** — Automatic theme adaptation
 - ⚡ **Cloudflare Workers** — Fast, serverless deployment
-
-## Demo
-
-When you call the `speak` tool, you get:
-- A sleek audio player with play/pause button
-- Animated waveform that follows playback progress
-- Duration display
-- Expandable transcript
 
 ## Quick Start
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/garan0613/voice-mcp.git
-cd voice-mcp
+git clone https://github.com/zuohang20100323/voice-mcp-mossland.git
+cd voice-mcp-mossland
 ```
 
 ### 2. Install dependencies
@@ -35,16 +29,17 @@ cd voice-mcp
 npm install
 ```
 
-### 3. Configure MiniMax API
+### 3. Configure Mossland API
 
-You'll need a MiniMax account with voice cloning enabled.
+You'll need a Mossland account with a cloned voice.
 
 Add your secrets to Cloudflare:
 
 ```bash
-npx wrangler secret put MINIMAX_API_KEY
-npx wrangler secret put MINIMAX_GROUP_ID
-npx wrangler secret put VOICE_ID
+npx wrangler secret put MOSSLAND_API_KEY
+npx wrangler secret put MOSSLAND_VOICE_ID
+npx wrangler secret put MOSSLAND_BASE_URL  # Optional, defaults to https://api.mosi.cn/v1
+npx wrangler secret put MOSSLAND_TTS_MODEL  # Optional, defaults to moss-speech-turbo
 npx wrangler secret put BOT_NAME  # Optional, defaults to "AI"
 ```
 
@@ -64,9 +59,10 @@ npx wrangler deploy
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `MINIMAX_API_KEY` | ✅ | Your MiniMax API key |
-| `MINIMAX_GROUP_ID` | ✅ | Your MiniMax group ID |
-| `VOICE_ID` | ✅ | The cloned voice ID |
+| `MOSSLAND_API_KEY` | ✅ | Your Mossland API key |
+| `MOSSLAND_VOICE_ID` | ✅ | The cloned voice ID |
+| `MOSSLAND_BASE_URL` | ❌ | Mossland API base URL (default: `https://api.mosi.cn/v1`) |
+| `MOSSLAND_TTS_MODEL` | ❌ | TTS model name (default: `moss-speech-turbo`) |
 | `BOT_NAME` | ❌ | Display name (default: "AI") |
 
 ## API Endpoints
@@ -77,49 +73,13 @@ npx wrangler deploy
 | `GET /speak?text=Hello` | Direct audio file |
 | `GET /status` | Health check |
 
-## How to Clone a Voice
-
-1. Go to [MiniMax Console](https://platform.minimaxi.com/)
-2. Navigate to Voice Cloning
-3. Upload 10-30 seconds of clear audio
-4. Wait for processing (usually a few minutes)
-5. Copy the Voice ID
-
-## Custom Deployment
-
-### Using a Custom Domain
-
-1. Add your domain to Cloudflare
-2. Create a DNS record pointing to your Worker
-3. Update `wrangler.jsonc`:
-
-```json
-{
-  "routes": [
-    { "pattern": "voice.yourdomain.com/*", "zone_name": "yourdomain.com" }
-  ]
-}
-```
-
-### Self-Hosting (Node.js)
-
-The core MCP logic can be adapted for other platforms. You'll need to:
-
-1. Replace `createMcpHandler` with a standard HTTP/SSE handler
-2. Use `@modelcontextprotocol/sdk` directly
-3. Handle the SSE transport yourself
-
 ## Tech Stack
 
 - [Cloudflare Workers](https://workers.cloudflare.com/) — Serverless runtime
 - [MCP SDK](https://github.com/modelcontextprotocol/sdk) — Model Context Protocol
-- [MiniMax TTS](https://platform.minimaxi.com/) — Voice synthesis
+- [Mossland TTS](https://api.mosi.cn) — Voice synthesis
 - [ext-apps](https://modelcontextprotocol.io/docs/concepts/ext-apps) — Inline UI rendering
 
 ## License
 
 MIT © 2026
-
-## Credits
-
-Inspired by the need to give AI assistants a voice. Built with ❤️

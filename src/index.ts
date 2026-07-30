@@ -1,10 +1,10 @@
 /**
- * voice-mcp
+ * voice-mcp-mossland
  * 
  * An MCP server for AI voice synthesis with inline audio player.
- * Supports MiniMax TTS API with custom voice cloning.
+ * Uses Mossland TTS engine (OpenAI-compatible) with custom cloned voice.
  * 
- * GitHub: https://github.com/garan0613/voice-mcp
+ * Forked from: https://github.com/garan0613/voice-mcp
  * License: MIT
  */
 
@@ -17,28 +17,13 @@ import { z } from "zod";
 // =============================================================================
 
 export interface Env {
-  // MiniMax API credentials
-  MINIMAX_API_KEY: string;
-  MINIMAX_GROUP_ID: string;
-  VOICE_ID: string;
-  // Optional: custom bot name for display
+  // Mossland API credentials
+  MOSSLAND_API_KEY: string;
+  MOSSLAND_VOICE_ID: string;
+  // Optional
+  MOSSLAND_BASE_URL?: string;
+  MOSSLAND_TTS_MODEL?: string;
   BOT_NAME?: string;
-}
-
-interface T2AResponse {
-  data?: {
-    audio?: string;
-    status?: number;
-  };
-  extra_info?: {
-    audio_length?: number;
-    audio_sample_rate?: number;
-    audio_size?: number;
-  };
-  base_resp?: {
-    status_code: number;
-    status_msg: string;
-  };
 }
 
 // =============================================================================
@@ -326,58 +311,54 @@ function getPlayerHTML(botName: string): string {
 }
 
 // =============================================================================
-// MiniMax API Helper
+// Mossland TTS API Helper (OpenAI-compatible)
 // =============================================================================
 
 async function generateAudio(env: Env, text: string): Promise<{ success: boolean; audio_base64?: string; error?: string }> {
   try {
-    const t2aUrl = `https://api.minimaxi.com/v1/t2a_v2?GroupId=${env.MINIMAX_GROUP_ID}`;
-    
-    const response = await fetch(t2aUrl, {
+    const baseUrl = env.MOSSLAND_BASE_URL || 'https://api.mosi.cn/v1';
+    const model = env.MOSSLAND_TTS_MODEL || 'moss-speech-turbo';
+
+    const response = await fetch(`${baseUrl}/audio/speech`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${env.MINIMAX_API_KEY}`,
+        'Authorization': `Bearer ${env.MOSSLAND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'speech-2.8-hd',
-        text: text,
-        stream: false,
-        voice_setting: {
-          voice_id: env.VOICE_ID,
-          speed: 1.0,
-          vol: 1.0,
-          pitch: 0,
-        },
-        audio_setting: {
-          sample_rate: 32000,
-          format: 'mp3',
-        },
+        model: model,
+        input: text,
+        voice: env.MOSSLAND_VOICE_ID,
+        response_format: 'mp3',
       }),
     });
 
-    const data = await response.json() as T2AResponse;
-    
-    if (data.base_resp && data.base_resp.status_code !== 0) {
-      return { success: false, error: data.base_resp.status_msg };
-    }
-
-    if (data.data?.audio) {
-      const hexString = data.data.audio;
-      const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
-      
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        const chunk = bytes.slice(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, Array.from(chunk));
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMsg: string;
+      try {
+        const errJson = JSON.parse(errorText);
+        errorMsg = errJson.error?.message || errJson.message || errorText;
+      } catch {
+        errorMsg = errorText || `HTTP ${response.status}`;
       }
-      const base64Audio = btoa(binary);
-      
-      return { success: true, audio_base64: base64Audio };
+      return { success: false, error: errorMsg };
     }
 
-    return { success: false, error: 'Failed to generate audio' };
+    // Mossland returns raw audio bytes (OpenAI TTS format)
+    const audioBuffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(audioBuffer);
+
+    // Convert to base64
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.slice(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    const base64Audio = btoa(binary);
+
+    return { success: true, audio_base64: base64Audio };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -392,7 +373,7 @@ function createVoiceServer(env: Env): McpServer {
   const PLAYER_HTML = getPlayerHTML(botName);
   
   const server = new McpServer({
-    name: "voice-mcp",
+    name: "voice-mcp-mossland",
     version: "1.0.0",
   });
 
@@ -421,7 +402,7 @@ function createVoiceServer(env: Env): McpServer {
     "speak",
     {
       title: `${botName}'s Voice`,
-      description: `Make ${botName} speak with a custom cloned voice. The audio will play in an inline player.`,
+      description: `Make ${botName} speak with a custom cloned Mossland voice. The audio will play in an inline player.`,
       inputSchema: z.object({
         text: z.string().describe("Text to speak"),
       }),
@@ -493,9 +474,10 @@ export default {
     if (path === '/status') {
       return Response.json({
         status: 'ok',
-        service: 'voice-mcp',
+        service: 'voice-mcp-mossland',
         version: '1.0.0',
-        voice_id: env.VOICE_ID ? 'configured' : 'not configured',
+        voice_id: env.MOSSLAND_VOICE_ID ? 'configured' : 'not configured',
+        engine: 'mossland',
       }, { headers: corsHeaders });
     }
 
@@ -540,7 +522,7 @@ export default {
         `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>voice-mcp</title>
+<title>voice-mcp-mossland</title>
 <style>
   body { font-family: system-ui; max-width: 600px; margin: 40px auto; padding: 20px; color: #333; line-height: 1.6; }
   h1 { color: #07c160; }
@@ -550,8 +532,8 @@ export default {
   a { color: #07c160; }
 </style>
 </head><body>
-<h1>🎙️ voice-mcp</h1>
-<p>An MCP server for AI voice synthesis with inline audio player.</p>
+<h1>🎙️ voice-mcp-mossland</h1>
+<p>An MCP server for AI voice synthesis with Mossland TTS engine.</p>
 
 <div class="section">
 <h3>MCP Server</h3>
@@ -575,7 +557,7 @@ export default {
 </div>
 
 <p style="margin-top: 32px; color: #666; font-size: 14px;">
-  <a href="https://github.com/xxx/voice-mcp">GitHub</a> · MIT License
+  <a href="https://github.com/zuohang20100323/voice-mcp-mossland">GitHub</a> · MIT License
 </p>
 </body></html>`,
         { headers: { 'Content-Type': 'text/html; charset=utf-8' } },

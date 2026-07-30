@@ -1,7 +1,7 @@
 {
-  "name": "voice-mcp",
+  "name": "voice-mcp-mossland",
   "version": "1.0.0",
-  "description": "An MCP server for AI voice synthesis with inline audio player",
+  "description": "An MCP server for AI voice synthesis with Mossland TTS engine",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,7 +26,7 @@
     "text-to-speech",
     "ai",
     "claude",
-    "minimax"
+    "mossland"
   ],
   "license": "MIT"
 }
