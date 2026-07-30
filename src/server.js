@@ -26,7 +26,7 @@ const ENGINE = process.env.TTS_ENGINE || "mossland";
 const MOSSLAND_BASE_URL = process.env.MOSSLAND_BASE_URL || "https://api.mosi.cn/v1";
 const MOSSLAND_API_KEY  = process.env.MOSSLAND_API_KEY  || "";
 const MOSSLAND_VOICE_ID = process.env.MOSSLAND_VOICE_ID || "1f4af4c7-eb64-49c3-bc72-de9c6ff585bc";
-const MOSSLAND_TTS_MODEL= process.env.MOSSLAND_TTS_MODEL  || "moss-speech-turbo";
+const MOSSLAND_TTS_MODEL= process.env.MOSSLAND_TTS_MODEL  || "moss-tts";
 const BOT_NAME = process.env.CHARACTER_NAME || "S.CHI";
 
 /* ------------------------------------------------------------------ */
