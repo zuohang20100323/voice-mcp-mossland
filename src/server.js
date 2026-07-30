@@ -48,7 +48,7 @@ function mosslandTTS(text) {
     const opts = {
       hostname: url.hostname,
       port: url.port || 443,
-      path: "/v1/audio/speech",
+      path: "/audio/speech",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
